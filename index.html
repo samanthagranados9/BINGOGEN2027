@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINGO GEN27 - Menú de Pedidos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header>
+    <h1>BINGO GEN27</h1>
+    <p>Selecciona tu pedido y método de pago</p>
+  </header>
+
+  <main class="container">
+    <div id="menu-container" class="menu-list">
+      <!-- Los productos se cargarán desde script.js -->
+    </div>
+
+    <!-- Sección de Método de Pago -->
+    <section class="payment-section">
+      <h3>Método de Pago</h3>
+      <div class="payment-options">
+        <label class="radio-label">
+          <input type="radio" name="pago" value="efectivo" checked onchange="togglePago()">
+          <span>Efectivo</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="pago" value="sinpe" onchange="togglePago()">
+          <span>SINPE Móvil</span>
+        </label>
+      </div>
+
+      <!-- Cuadro informativo SINPE -->
+      <div id="sinpe-info" class="sinpe-card hidden">
+        <h4>Datos para SINPE Móvil</h4>
+        <p><strong>Número:</strong> <span id="num-sinpe">8362-4868</span></p>
+        <p><strong>Nombre:</strong> Laura Jiménez</p>
+        <p class="nota">⚠️ Enviar comprobante al WhatsApp: <strong>7279-8825</strong></p>
+      </div>
+    </section>
+
+    <!-- Total a pagar -->
+    <div class="total-bar">
+      <span>Total a pagar:</span>
+      <span id="total-monto">₡0</span>
+    </div>
+
+    <button class="btn-whatsapp" onclick="enviarWhatsApp()">Enviar Pedido por WhatsApp</button>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
