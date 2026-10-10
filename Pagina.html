@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BINGO GEN27 - Menú Interactivo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom smooth scroll and scrollbar design */
+        html { scroll-behavior: smooth; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col pb-28 md:pb-12">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-500 text-slate-900 font-black text-xl px-3 py-1.5 rounded-lg tracking-wider shadow">
+                    GEN27
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold leading-tight">BINGO GEN27</h1>
+                    <p class="text-xs text-slate-400">Menú Digital & Pedidos</p>
+                </div>
+            </div>
+            <button onclick="resetCart()" class="text-slate-400 hover:text-red-400 text-sm font-medium transition-colors flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                <i class="fa-solid fa-rotate-right text-xs"></i>
+                <span class="hidden sm:inline">Limpiar</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto w-full px-4 pt-6 flex-grow">
+        <!-- Notification Toast -->
+        <div id="toast" class="fixed top-20 right-4 left-4 sm:left-auto sm:w-80 bg-slate-800 text-white p-3.5 rounded-xl shadow-xl z-50 transform translate-y-[-150%] opacity-0 transition-all duration-300 flex items-center justify-between border border-slate-700">
+            <div class="flex items-center gap-2.5">
+                <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+                <span id="toast-message" class="text-sm font-medium">Copiado al portapapeles</span>
+            </div>
+        </div>
+
+        <!-- Banner Info -->
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl p-5 mb-6 shadow-lg relative overflow-hidden">
+            <div class="relative z-10 flex flex-col md:flex-row justify-between md:items-center gap-3">
+                <div>
+                    <span class="inline-block bg-white/20 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2">¡Haz tu pedido en línea!</span>
+                    <h2 class="text-2xl font-bold">Selecciona tus platillos</h2>
+                    <p class="text-emerald-100 text-sm mt-1">Elige las cantidades deseadas y selecciona tu método de pago para procesar la orden.</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 text-center min-w-[140px]">
+                    <span class="block text-xs text-emerald-100 font-medium">TOTAL A PAGAR</span>
+                    <span id="header-total" class="text-2xl font-black tracking-tight">₡0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Categories / List -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+            <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-utensils text-emerald-600"></i>
+                    Lista de Productos
+                </h3>
+                <span id="items-count-badge" class="bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-full">0 artículos</span>
+            </div>
+
+            <!-- Items Table / Mobile List -->
+            <div class="divide-y divide-slate-100" id="products-container">
+                <!-- Javascript will inject products here -->
+            </div>
+        </section>
+
+        <!-- Payment & Summary Options -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-8">
+            <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg">
+                <i class="fa-solid fa-wallet text-emerald-600"></i>
+                Método de Pago
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                <!-- Option Cash -->
+                <label class="relative flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-slate-50" id="label-efectivo">
+                    <input type="radio" name="payment_method" value="Efectivo" class="sr-only" onchange="updatePaymentMethod('Efectivo')" checked>
+                    <div class="flex items-center gap-3 w-full">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                            <i class="fa-solid fa-money-bill-wave"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-800">Efectivo</div>
+                            <div class="text-xs text-slate-500">Pago en caja o al recibir</div>
+                        </div>
+                    </div>
+                </label>
+
+                <!-- Option SINPE -->
+                <label class="relative flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-slate-50" id="label-sinpe">
+                    <input type="radio" name="payment_method" value="SINPE Móvil" class="sr-only" onchange="updatePaymentMethod('SINPE Móvil')">
+                    <div class="flex items-center gap-3 w-full">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                            <i class="fa-solid fa-mobile-screen-button"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-800">SINPE Móvil</div>
+                            <div class="text-xs text-slate-500">Transferencia electrónica rápida</div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- SINPE Info Card (Dynamic display) -->
+            <div id="sinpe-details" class="hidden bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5 mb-5 transition-all">
+                <div class="flex items-center justify-between mb-3 pb-3 border-b border-blue-100">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-blue-600 text-white font-bold text-xs px-2.5 py-1 rounded">SINPE MÓVIL</span>
+                        <span class="text-xs font-semibold text-blue-800">Datos para transferencia</span>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-3 rounded-lg border border-blue-100 shadow-sm gap-2">
+                        <div>
+                            <span class="text-xs font-medium text-slate-500 block">Número SINPE Móvil</span>
+                            <span class="text-lg font-bold text-slate-900 tracking-wide">8362-4868</span>
+                        </div>
+                        <button onclick="copyToClipboard('83624868', 'Número SINPE copiado')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 self-start sm:self-auto">
+                            <i class="fa-regular fa-copy"></i>
+                            Copiar Número
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
+                            <span class="text-xs font-medium text-slate-500 block">Titular de la cuenta</span>
+                            <span class="font-bold text-slate-800">Laura Jiménez</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
+                            <span class="text-xs font-medium text-slate-500 block">Enviar comprobante al</span>
+                            <span class="font-bold text-slate-800">7279-8825</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Notes / Customer Name Optional -->
+            <div class="mt-4">
+                <label for="customer-name" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Nombre del Cliente / Mesa (Opcional)</label>
+                <input type="text" id="customer-name" placeholder="Ej: Juan Pérez / Mesa 4" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
+            </div>
+        </section>
+    </main>
+
+    <!-- Fixed Bottom Summary & Order Action Bar -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-2xl p-4 z-40">
+        <div class="max-w-4xl mx-auto flex items-center justify-between gap-4">
+            <div>
+                <span class="text-xs font-semibold text-slate-500 block uppercase tracking-wider">Total a Pagar</span>
+                <span id="bottom-total" class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">₡0</span>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="openSummaryModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-3 rounded-xl transition-all flex items-center gap-2 shadow-sm text-sm sm:text-base">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span class="hidden xs:inline">Resumen</span>
+                </button>
+                <button onclick="sendOrderWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/30 text-sm sm:text-base">
+                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                    <span>Enviar Pedido</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Summary Modal -->
+    <div id="modal-summary" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-receipt text-emerald-400"></i>
+                    <h3 class="font-bold text-lg">Resumen de Pedido</h3>
+                </div>
+                <button onclick="closeSummaryModal()" class="text-slate-400 hover:text-white text-lg w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-800">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Receipt Ticket Content -->
+            <div class="p-5 overflow-y-auto flex-grow text-slate-700 text-sm space-y-4">
+                <div class="text-center pb-3 border-b border-dashed border-slate-300">
+                    <h2 class="font-black text-xl text-slate-900">BINGO GEN27</h2>
+                    <p class="text-xs text-slate-500">Ticket de Consumo</p>
+                    <p id="modal-date" class="text-xs text-slate-400 mt-1"></p>
+                </div>
+
+                <div id="modal-customer-info" class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs hidden">
+                    <span class="text-slate-500 font-medium">Cliente: </span>
+                    <span id="modal-customer-name" class="font-bold text-slate-800"></span>
+                </div>
+
+                <!-- Products Table -->
+                <div>
+                    <div class="grid grid-cols-12 font-semibold text-xs text-slate-400 border-b border-slate-200 pb-1 mb-2">
+                        <span class="col-span-6">PRODUCTO</span>
+                        <span class="col-span-2 text-center">CANT.</span>
+                        <span class="col-span-4 text-right">SUBTOTAL</span>
+                    </div>
+                    <div id="modal-items-list" class="space-y-2 divide-y divide-slate-100">
+                        <!-- Items injected by JS -->
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-dashed border-slate-300 space-y-1">
+                    <div class="flex justify-between items-center text-xs text-slate-500">
+                        <span>Método de Pago:</span>
+                        <span id="modal-payment-method" class="font-bold text-slate-800">Efectivo</span>
+                    </div>
+                    <div id="modal-sinpe-details" class="hidden text-xs bg-blue-50 p-2 rounded text-blue-800 space-y-0.5">
+                        <p><strong>SINPE:</strong> 8362-4868 (Laura Jiménez)</p>
+                        <p><strong>Comprobante al:</strong> 7279-8825</p>
+                    </div>
+                    <div class="flex justify-between items-center text-lg font-black text-slate-900 pt-2 border-t border-slate-200">
+                        <span>TOTAL:</span>
+                        <span id="modal-total-amount" class="text-emerald-600">₡0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex gap-2">
+                <button onclick="closeSummaryModal()" class="w-1/2 py-2.5 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors text-sm">
+                    Cerrar
+                </button>
+                <button onclick="sendOrderWhatsApp()" class="w-1/2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors text-sm flex items-center justify-center gap-1.5">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data list of products
+        const productsData = [
+            { id: 1, name: "Arroz con pollo + refresco", price: 2500 },
+            { id: 2, name: "Empanadas arregladas", price: 1500 },
+            { id: 3, name: "Entero de arroz con pollo", price: 4000 },
+            { id: 4, name: "Frijoles blancos + arroz + refresco", price: 2500 },
+            { id: 5, name: "Gallo de salchichón + refresco", price: 1000 },
+            { id: 6, name: "Medio de picadillo", price: 2500 },
+            { id: 7, name: "Picadillo de arracache + refresco", price: 1000 },
+            { id: 8, name: "Picadillo de papa + refresco", price: 1000 },
+            { id: 9, name: "Tamal + café", price: 1500 },
+            { id: 10, name: "Alfajores", price: 500 },
+            { id: 11, name: "Arroz con leche", price: 500 },
+            { id: 12, name: "Donas + refresco", price: 1000 },
+            { id: 13, name: "Agua dulce", price: 500 },
+            { id: 14, name: "Café con refill", price: 500 },
+            { id: 15, name: "Té frío", price: 500 },
+            { id: 16, name: "Churchill", price: 2500 },
+            { id: 17, name: "Granizado", price: 2000 }
+        ];
+
+        // App State
+        let quantities = {};
+        let selectedPaymentMethod = "Efectivo";
+
+        // Format Currency CRC
+        function formatCRC(amount) {
+            return "₡" + amount.toLocaleString('es-CR');
+        }
+
+        // Render Products List
+        function renderProducts() {
+            const container = document.getElementById('products-container');
+            container.innerHTML = '';
+
+            productsData.forEach((product, index) => {
+                const qty = quantities[product.id] || 0;
+                const subtotal = qty * product.price;
+
+                const row = document.createElement('div');
+                row.className = `p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${qty > 0 ? 'bg-emerald-50/40' : 'hover:bg-slate-50'}`;
+                
+                row.innerHTML = `
+                    <div class="flex-grow">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold text-slate-400 w-5">${index + 1}.</span>
+                            <span class="font-semibold text-slate-800 ${qty > 0 ? 'text-emerald-900 font-bold' : ''}">${product.name}</span>
+                        </div>
+                        <div class="text-xs text-slate-500 ml-7 mt-0.5">
+                            Precio unitario: <span class="font-medium text-slate-700">${formatCRC(product.price)}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between sm:justify-end gap-4 ml-7 sm:ml-0">
+                        <!-- Quantity Controller -->
+                        <div class="flex items-center border border-slate-300 rounded-xl overflow-hidden bg-white shadow-sm">
+                            <button onclick="updateQty(${product.id}, -1)" class="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition-colors">
+                                <i class="fa-solid fa-minus text-xs"></i>
+                            </button>
+                            <input type="number" min="0" value="${qty}" onchange="setQty(${product.id}, this.value)" class="w-12 h-9 text-center text-sm font-bold text-slate-800 focus:outline-none bg-transparent">
+                            <button onclick="updateQty(${product.id}, 1)" class="w-9 h-9 flex items-center justify-center text-emerald-700 hover:bg-emerald-50 active:bg-emerald-100 transition-colors">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                            </button>
+                        </div>
+
+                        <!-- Subtotal Display -->
+                        <div class="text-right min-w-[80px]">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 block sm:hidden">Subtotal</span>
+                            <span class="font-bold text-sm ${qty > 0 ? 'text-emerald-700' : 'text-slate-400'}">${formatCRC(subtotal)}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            updateTotals();
+            updatePaymentStyles();
+        }
+
+        function updateQty(id, change) {
+            const current = quantities[id] || 0;
+            const updated = Math.max(0, current + change);
+            quantities[id] = updated;
+            renderProducts();
+        }
+
+        function setQty(id, value) {
+            const parsed = parseInt(value) || 0;
+            quantities[id] = Math.max(0, parsed);
+            renderProducts();
+        }
+
+        function resetCart() {
+            quantities = {};
+            document.getElementById('customer-name').value = '';
+            renderProducts();
+            showToast('Menú reiniciado');
+        }
+
+        function updateTotals() {
+            let total = 0;
+            let totalItemsCount = 0;
+
+            productsData.forEach(p => {
+                const qty = quantities[p.id] || 0;
+                total += qty * p.price;
+                totalItemsCount += qty;
+            });
+
+            const formattedTotal = formatCRC(total);
+            document.getElementById('header-total').textContent = formattedTotal;
+            document.getElementById('bottom-total').textContent = formattedTotal;
+            document.getElementById('items-count-badge').textContent = `${totalItemsCount} ${totalItemsCount === 1 ? 'artículo' : 'artículos'}`;
+        }
+
+        // Payment selection handlers
+        function updatePaymentMethod(method) {
+            selectedPaymentMethod = method;
+            const sinpeBox = document.getElementById('sinpe-details');
+            if (method === 'SINPE Móvil') {
+                sinpeBox.classList.remove('hidden');
+            } else {
+                sinpeBox.classList.add('hidden');
+            }
+            updatePaymentStyles();
+        }
+
+        function updatePaymentStyles() {
+            const labelCash = document.getElementById('label-efectivo');
+            const labelSinpe = document.getElementById('label-sinpe');
+
+            if (selectedPaymentMethod === 'Efectivo') {
+                labelCash.className = "relative flex items-center p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50/30 shadow-sm cursor-pointer transition-all";
+                labelSinpe.className = "relative flex items-center p-4 rounded-xl border-2 border-slate-200 hover:bg-slate-50 cursor-pointer transition-all";
+            } else {
+                labelSinpe.className = "relative flex items-center p-4 rounded-xl border-2 border-blue-500 bg-blue-50/30 shadow-sm cursor-pointer transition-all";
+                labelCash.className = "relative flex items-center p-4 rounded-xl border-2 border-slate-200 hover:bg-slate-50 cursor-pointer transition-all";
+            }
+        }
+
+        function copyToClipboard(text, message) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(message);
+                });
+            } else {
+                // Fallback for non-HTTPS or iframe restricted environments
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast(message);
+                } catch (err) {
+                    console.error('Error al copiar: ', err);
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            msgEl.textContent = message;
+            
+            toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-150%]', 'opacity-0');
+            }, 3000);
+        }
+
+        function getSelectedItems() {
+            return productsData
+                .filter(p => (quantities[p.id] || 0) > 0)
+                .map(p => ({
+                    ...p,
+                    qty: quantities[p.id],
+                    subtotal: quantities[p.id] * p.price
+                }));
+        }
+
+        function openSummaryModal() {
+            const selectedItems = getSelectedItems();
+            const modalList = document.getElementById('modal-items-list');
+            const customerName = document.getElementById('customer-name').value.trim();
+            
+            modalList.innerHTML = '';
+
+            if (selectedItems.length === 0) {
+                modalList.innerHTML = `<div class="text-center py-6 text-slate-400">No has seleccionado ningún producto.</div>`;
+            } else {
+                selectedItems.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = "grid grid-cols-12 py-1.5 text-xs";
+                    row.innerHTML = `
+                        <span class="col-span-6 font-medium text-slate-800">${item.name}</span>
+                        <span class="col-span-2 text-center text-slate-600 font-bold">${item.qty}</span>
+                        <span class="col-span-4 text-right font-bold text-slate-800">${formatCRC(item.subtotal)}</span>
+                    `;
+                    modalList.appendChild(row);
+                });
+            }
+
+            // Customer info
+            const customerBox = document.getElementById('modal-customer-info');
+            if (customerName) {
+                document.getElementById('modal-customer-name').textContent = customerName;
+                customerBox.classList.remove('hidden');
+            } else {
+                customerBox.classList.add('hidden');
+            }
+
+            // Payment Details
+            document.getElementById('modal-payment-method').textContent = selectedPaymentMethod;
+            const sinpeDetails = document.getElementById('modal-sinpe-details');
+            if (selectedPaymentMethod === 'SINPE Móvil') {
+                sinpeDetails.classList.remove('hidden');
+            } else {
+                sinpeDetails.classList.add('hidden');
+            }
+
+            // Total & Date
+            let total = selectedItems.reduce((acc, curr) => acc + curr.subtotal, 0);
+            document.getElementById('modal-total-amount').textContent = formatCRC(total);
+            
+            const now = new Date();
+            document.getElementById('modal-date').textContent = now.toLocaleDateString('es-CR', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            document.getElementById('modal-summary').classList.remove('hidden');
+        }
+
+        function closeSummaryModal() {
+            document.getElementById('modal-summary').classList.add('hidden');
+        }
+
+        function sendOrderWhatsApp() {
+            const selectedItems = getSelectedItems();
+            if (selectedItems.length === 0) {
+                showToast("Por favor selecciona al menos un producto");
+                return;
+            }
+
+            const customerName = document.getElementById('customer-name').value.trim();
+            let total = selectedItems.reduce((acc, curr) => acc + curr.subtotal, 0);
+
+            let text = `*BINGO GEN27 - NUEVO PEDIDO*\n`;
+            text += `-----------------------------------\n`;
+            if (customerName) {
+                text += ` *Cliente:* ${customerName}\n`;
+            }
+            text += ` *Pago:* ${selectedPaymentMethod}\n`;
+            text += `-----------------------------------\n`;
+            text += `*DETALLE DEL PEDIDO:*\n`;
+
+            selectedItems.forEach(item => {
+                text += `• ${item.qty}x ${item.name} = ${formatCRC(item.subtotal)}\n`;
+            });
+
+            text += `-----------------------------------\n`;
+            text += ` *TOTAL A PAGAR: ${formatCRC(total)}*\n\n`;
+
+            if (selectedPaymentMethod === 'SINPE Móvil') {
+                text += `📲 *Datos SINPE Móvil:*\n`;
+                text += `• Número: 8362-4868\n`;
+                text += `• Nombre: Laura Jiménez\n`;
+                text += `• Adjunto comprobante a este chat.\n`;
+            }
+
+            const encodedText = encodeURIComponent(text);
+            const phoneNumber = "50672798825"; // Receiver Costa Rica number
+            window.open(`https://wa.me/${phoneNumber}?text=${encodedText}`, '_blank');
+        }
+
+        // On Load Init
+        window.onload = function() {
+            renderProducts();
+        };
+    </script>
+</body>
+</html>
